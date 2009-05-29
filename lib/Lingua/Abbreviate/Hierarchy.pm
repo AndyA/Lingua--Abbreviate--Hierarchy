@@ -105,7 +105,8 @@ sub _abb {
     }
     if ( defined( my $trunc = $self->{trunc} ) ) {
       return substr $trunc, 0, $max if length $trunc > $max;
-      return $trunc . substr $ab, 0, $max - length $trunc;
+      return $trunc . substr $ab,
+       length( $ab ) - $max + length( $trunc );
     }
     return $ab;
   }

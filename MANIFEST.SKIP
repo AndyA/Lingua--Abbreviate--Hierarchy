@@ -28,3 +28,4 @@
 ^\.prove$
 ^Lingua-Abbreviate-Hierarchy-
 ^Session\.vim$
+^tools/
