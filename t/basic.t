@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More tests => 12;
 use Test::Differences;
 use Data::Dumper;
 use Lingua::Abbreviate::Hierarchy;
@@ -87,6 +87,26 @@ sub newlah {
      )
    ],
    'abbr - keep 2';
+}
+
+{
+  my $lah = newlah( max => 9 );
+  eq_or_diff [ $lah->ab( @ns ) ], [
+    qw(
+     c.l.pe.mi
+     c.l.pe.a
+     c.l.pe.mo
+     c.l.forth
+     c.l.basic
+     c.l.ba.b
+     c.l.bcpl
+     c.l.py
+     c.l.py.m
+     c.l.cobol
+     c.lang.c
+     )
+   ],
+   'abbr - max 9';
 }
 
 # vim:ts=2:sw=2:et:ft=perl

@@ -99,16 +99,31 @@ sub _ab {
 
 sub _abb {
   my ( $self, $term ) = @_;
-  my $limiter = sub { scalar @_ };
-  if ( defined( my $keep = $self->{keep} ) ) {
-    my $lt = $limiter;
-    $limiter = sub { max $lt->( @_ ) - $keep, 0 };
+
+  my $sepp = quotemeta $self->{sep};
+  my @path = split /$sepp/, $term;
+
+  if ( defined( my $max = $self->{max} ) ) {
+    my $from = $self->{only} || 0;
+    my $to = scalar( @path ) - ( $self->{keep} || 0 );
+    my $ab;
+    for my $cnt ( $from .. $to ) {
+      $ab = join $self->{join},
+       $self->_abbr( $self->{_ns}, $cnt, @path );
+      return $ab if length $ab <= $max;
+    }
+    if ( defined( my $trunc = $self->{trunc} ) ) {
+      return substr $trunc, 0, $max if length $trunc > $max;
+      return $trunc . substr $ab, 0, $max - length $trunc;
+    }
+    return $ab;
   }
-  if ( defined( my $only = $self->{only} ) ) {
-    my $lt = $limiter;
-    $limiter = sub { min $lt->( @_ ), $only };
+  else {
+    my $lt = scalar @path;
+    $lt = max( $lt - $self->{keep}, 0 ) if defined $self->{keep};
+    $lt = min( $lt, $self->{only} ) if defined $self->{only};
+    return join $self->{join}, $self->_abbr( $self->{_ns}, $lt, @path );
   }
-  return $self->_ab( $limiter, $term );
 }
 
 sub _abbr {
