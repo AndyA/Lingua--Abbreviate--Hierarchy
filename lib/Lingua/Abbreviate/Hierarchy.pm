@@ -24,6 +24,12 @@ our $VERSION = '0.01';
   
 =head1 DESCRIPTION
 
+It's a common practice to abbreviate the elements of namespaces
+like this:
+
+  comp.lang.perl.misc     -> c.l.p.misc
+  comp.lang.perl.advocacy -> c.l.p.advocacy
+
 =head1 INTERFACE 
 
 =head2 C<< new >>

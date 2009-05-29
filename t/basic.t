@@ -6,7 +6,7 @@ use warnings;
 use Test::More tests => 15;
 use Test::Differences;
 use Data::Dumper;
-use Lingua::Abbreviate::Hierarchy;
+use Lingua::Ab::H;
 
 my @ns = qw(
  comp.lang.perl.misc
@@ -23,7 +23,7 @@ my @ns = qw(
 );
 
 sub newlah {
-  ok my $lah = Lingua::Abbreviate::Hierarchy->new( @_ ), 'new';
+  ok my $lah = Lingua::Ab::H->new( @_ ), 'new';
   isa_ok $lah, 'Lingua::Abbreviate::Hierarchy';
   $lah->add_namespace( @ns );
   return $lah;
