@@ -159,7 +159,8 @@ sub _make_ab {
 
 }
 
-1;
+"Ceci n'est pas 'Modern Perl'";
+
 __END__
 
 =head1 DEPENDENCIES
