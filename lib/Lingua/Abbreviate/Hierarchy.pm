@@ -106,7 +106,7 @@ sub _abb {
   if ( defined( my $max = $self->{max} ) ) {
     my $from = $self->{only} || 0;
     my $to = scalar( @path ) - ( $self->{keep} || 0 );
-    my $ab;
+    my $ab = $term;
     for my $cnt ( $from .. $to ) {
       $ab = join $self->{join},
        $self->_abbr( $self->{_ns}, $cnt, @path );
