@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 15;
+use Test::More tests => 16;
 use Test::Differences;
 use Data::Dumper;
 use Lingua::Ab::H;
@@ -23,9 +23,8 @@ my @ns = qw(
 );
 
 sub newlah {
-  ok my $lah = Lingua::Ab::H->new( @_ ), 'new';
+  ok my $lah = Lingua::Ab::H->new( @_, ns => \@ns ), 'new';
   isa_ok $lah, 'Lingua::Abbreviate::Hierarchy';
-  $lah->add_namespace( @ns );
   return $lah;
 }
 
@@ -127,6 +126,29 @@ sub newlah {
      )
    ],
    'abbr - max 8, trunc *';
+}
+
+{
+  my @dom = qw(
+   altavista.co.uk
+   amazon.co.uk
+   goodies.co.uk
+   google.co.uk
+   hexten.co.uk
+   tagish.co.uk
+  );
+  my $lah = Lingua::Ab::H->new( ns => \@dom, flip => 1 );
+  eq_or_diff [ $lah->ab( @dom ) ], [
+    qw(
+     al.c.u
+     am.c.u
+     good.c.u
+     goog.c.u
+     h.c.u
+     t.c.u
+     )
+   ],
+   'abbr - flip';
 }
 
 # vim:ts=2:sw=2:et:ft=perl

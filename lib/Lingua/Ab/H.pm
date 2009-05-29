@@ -17,6 +17,12 @@ This document describes Lingua::Ab::H version 0.01
 
 our $VERSION = '0.01';
 
-1;
+=head1 INTERFACE
+
+See L<Lingua::Abbreviate::Hierarchy>.
+
+=cut
+
+"Ceci n'est pas 'Modern Perl'";
 
 # vim:ts=2:sw=2:sts=2:et:ft=perl

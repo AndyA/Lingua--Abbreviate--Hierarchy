@@ -21,6 +21,21 @@ our $VERSION = '0.01';
 =head1 SYNOPSIS
 
   use Lingua::Abbreviate::Hierarchy;
+  my $abr = Lingua::Abbreviate::Hierarchy->new( keep => 1 );
+
+  $abr->add_namespace(qw(
+    comp.lang.perl.misc
+    comp.lang.perl.advocacy
+  ));
+
+  # gets 'c.l.p.misc'
+  my $clpm = $abr->ab('comp.lang.perl.misc');
+
+  # abbreviate an array
+  my @ab = $abr->ab(qw(
+    comp.lang.perl.misc
+    comp.lang.perl.advocacy
+  ));
   
 =head1 DESCRIPTION
 
@@ -30,9 +45,94 @@ like this:
   comp.lang.perl.misc     -> c.l.p.misc
   comp.lang.perl.advocacy -> c.l.p.advocacy
 
+This module performs such abbreviation. It guarantees that generated
+abbreviations are long enough to be unique within the current namespace.
+
 =head1 INTERFACE 
 
+To abbreviate names within a namespace use the module:
+
+  use Lingua::Ab::H;   # use abbreviated name
+
+Create a new abbreviator:
+
+  my $abr = Lingua::Ab::H->new( keep => 1 );
+
+Set up the namespace:
+
+  $abr->add_namespace(qw(
+    comp.lang.perl.misc
+    comp.lang.perl.advocacy
+  ));
+
+Get your abbreviations:
+
+  # gets 'c.l.p.misc'
+  my $clpm = $abr->ab('comp.lang.perl.misc');
+
+  # abbreviate an array
+  my @ab = $abr->ab(qw(
+    comp.lang.perl.misc
+    comp.lang.perl.advocacy
+  ));
+
+Often the namespace will be larger; for example if you wanted to
+generate abbreviations that would be unique within the entire
+comp.lang.* hierarchy you would add all the terms in that space to the
+abbreviator.
+
 =head2 C<< new >>
+
+Create a new abbreviator. Options may be passed as key, value pairs:
+
+  my $abr = Lingua::Ab::H->new(
+    keep => 1,
+    sep => '::'
+  );
+
+The following options are recognised:
+
+=over
+
+=item C<sep>
+
+The string that separates components in the namespace. For example '.'
+for domain names or '::' for Perl package names;
+
+=item C<only>
+
+Abbreviate only the initial I<N> elements in the name.
+
+=item C<keep>
+
+Leave I<N> elements at the end of the name unabbreviated.
+
+=item C<max>
+
+Abbreviate from the left until the generated abbreviation contains I<N>
+or fewer characters. If C<only> is specified then at least that many
+elements will be abbreviated. If C<keep> is specified that many trailing
+elements will be unabbreviated.
+
+May return more than I<N> characters if the fully abbreviated name is
+still too long.
+
+=item C<trunc>
+
+A truncation string (which may be empty). When C<trunc> is supplied the
+generated abbreviation will always be <= C<max> characters and will be
+prefixed by the truncation string.
+
+=item C<flip>
+
+Normally we consider the namespace to be rooted at the left (like a
+filename or package name). Set C<flip> to true to process right-rooted
+namespaces (like domain names).
+
+=item C<ns>
+
+Supply a reference to an array containing namespace terms. See
+C<add_namespace> for more details.
 
 =cut
 
@@ -43,31 +143,45 @@ like this:
     keep  => undef,
     max   => undef,
     trunc => undef,
+    flip  => 0,
   );
 
   sub new {
     my ( $class, %options ) = @_;
 
+    my $ns = delete $options{ns};
     my @unk = grep { !exists $DEFAULT{$_} } keys %options;
     croak "Unknown option(s): ", join ', ', sort @unk if @unk;
-    my $self = bless { %DEFAULT, %options, _ns => {} }, $class;
-    $self->{join} = $self->{sep} unless exists $self->{join};
+    my $self = bless { %DEFAULT, %options, ns => {} }, $class;
+    @{$self}{ 'flipa', 'flips' }
+     = $self->{flip}
+     ? ( sub { reverse @_ }, sub { $_[0] } )
+     : ( sub { @_ }, sub { scalar reverse $_[0] } );
+    $self->add_namespace( $ns ) if defined $ns;
     return $self;
   }
 }
 
 =head2 C<< add_namespace >>
 
+Add terms to the abbreviator's namespace:
+
+  $abr->add_namespace( 'foo.com', 'bar.com' );
+
+When abbreviating a term only those elements of the term that fall
+within the namespace will be abbreviated. Elements outside the namespace
+will be untouched.
+
 =cut
 
 sub add_namespace {
   my $self = shift;
   croak "Can't add to namespace after calling ab()"
-   if $self->{_cache};
+   if $self->{cache};
   my $sepp = quotemeta $self->{sep};
   for my $term ( map { 'ARRAY' eq ref $_ ? @$_ : $_ } @_ ) {
-    my @path = split /$sepp/o, $term;
-    $self->{_ns} = $self->_add_node( $self->{_ns}, @path );
+    my @path = $self->{flipa}( split /$sepp/o, $term );
+    $self->{ns} = $self->_add_node( $self->{ns}, @path );
   }
 }
 
@@ -86,12 +200,20 @@ sub _add_node {
 
 =head2 C<< ab >>
 
+Abbreviate one or more terms:
+
+  my $short = $abr->ab( 'this.is.a.long.name' );
+
+Or with an array:
+
+  my @short = $abr->ab( @long );
+
 =cut
 
 sub ab {
   my $self = shift;
-  $self->_init unless $self->{_cache};
-  my @ab = map { $self->{_cache}{$_} ||= $self->_abb( $_ ) } @_;
+  $self->_init unless $self->{cache};
+  my @ab = map { $self->{cache}{$_} ||= $self->_abb( $_ ) } @_;
   return wantarray ? @ab : $ab[0];
 }
 
@@ -99,20 +221,30 @@ sub _abb {
   my ( $self, $term ) = @_;
 
   my $sepp = quotemeta $self->{sep};
-  my @path = split /$sepp/, $term;
+  my @path = $self->{flipa}( split /$sepp/, $term );
+  my $join = defined $self->{join} ? $self->{join} : $self->{sep};
+  my $abc  = sub {
+    my ( $cnt, @path ) = @_;
+    join $join,
+     $self->{flipa}( $self->_ab( $self->{ns}, $cnt, @path ) );
+  };
 
   if ( defined( my $max = $self->{max} ) ) {
     my $from = $self->{only} || 0;
     my $to = scalar( @path ) - ( $self->{keep} || 0 );
     my $ab = $term;
     for my $cnt ( $from .. $to ) {
-      $ab = join $self->{join}, $self->_ab( $self->{_ns}, $cnt, @path );
+      $ab = $abc->( $cnt, @path );
       return $ab if length $ab <= $max;
     }
     if ( defined( my $trunc = $self->{trunc} ) ) {
-      return substr $trunc, 0, $max if length $trunc > $max;
-      return $trunc . substr $ab,
-       length( $ab ) - $max + length( $trunc );
+      my $flp = $self->{flips};
+      my $trc = sub {
+        my ( $tr, $a ) = @_;
+        return substr $tr, 0, $max if length $tr > $max;
+        return substr( $a, 0, $max - length $tr ) . $tr;
+      };
+      return $flp->( $trc->( $flp->( $trunc ), $flp->( $ab ) ) );
     }
     return $ab;
   }
@@ -120,7 +252,7 @@ sub _abb {
     my $lt = scalar @path;
     $lt = max( $lt - $self->{keep}, 0 ) if defined $self->{keep};
     $lt = min( $lt, $self->{only} ) if defined $self->{only};
-    return join $self->{join}, $self->_ab( $self->{_ns}, $lt, @path );
+    return $abc->( $lt, @path );
   }
 }
 
@@ -134,8 +266,8 @@ sub _ab {
 
 sub _init {
   my $self = shift;
-  $self->_make_ab( $self->{_ns} );
-  $self->{_cache} = {};
+  $self->_make_ab( $self->{ns} );
+  $self->{cache} = {};
 }
 
 sub _ab_list {
