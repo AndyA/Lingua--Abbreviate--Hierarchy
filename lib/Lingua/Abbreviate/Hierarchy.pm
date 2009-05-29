@@ -4,6 +4,7 @@ use warnings;
 use strict;
 
 use Carp qw( croak );
+use List::Util qw( min max );
 
 =head1 NAME
 
@@ -31,28 +32,19 @@ our $VERSION = '0.01';
 
 {
   my %DEFAULT = (
-    sep  => '.',
-    only => undef,
-    keep => undef,
-  );
-
-  my %FILTER = (
-    #    sep => sub {
-    #      my $q = quotemeta shift;
-    #      return qr{$q};
-    #    },
+    sep   => '.',
+    only  => undef,
+    keep  => undef,
+    max   => undef,
+    trunc => undef,
   );
 
   sub new {
     my ( $class, %options ) = @_;
 
-    my @unk = grep { !$DEFAULT{$_} } keys %options;
+    my @unk = grep { !exists $DEFAULT{$_} } keys %options;
     croak "Unknown option(s): ", join ', ', sort @unk if @unk;
-    my %opt = ( %DEFAULT, %options, _ns => {} );
-    my $self = bless {}, $class;
-    while ( my ( $k, $v ) = each %opt ) {
-      $self->{$k} = $FILTER{$k} ? $FILTER{$k}( $v ) : $v;
-    }
+    my $self = bless { %DEFAULT, %options, _ns => {} }, $class;
     $self->{join} = $self->{sep} unless exists $self->{join};
     return $self;
   }
@@ -93,22 +85,38 @@ sub _add_node {
 sub ab {
   my $self = shift;
   $self->_init unless $self->{_cache};
-  my @ab = map { $self->{_cache}{$_} ||= $self->_ab( $_ ) } @_;
+  my @ab = map { $self->{_cache}{$_} ||= $self->_abb( $_ ) } @_;
   return wantarray ? @ab : $ab[0];
 }
 
 sub _ab {
-  my ( $self, $term ) = @_;
+  my ( $self, $lt, $term ) = @_;
   my $sepp = quotemeta $self->{sep};
+  my @path = split /$sepp/, $term;
   return join $self->{join},
-   $self->_abbr( $self->{_ns}, split /$sepp/, $term );
+   $self->_abbr( $self->{_ns}, $lt->( @path ), @path );
+}
+
+sub _abb {
+  my ( $self, $term ) = @_;
+  my $limiter = sub { scalar @_ };
+  if ( defined( my $keep = $self->{keep} ) ) {
+    my $lt = $limiter;
+    $limiter = sub { max $lt->( @_ ) - $keep, 0 };
+  }
+  if ( defined( my $only = $self->{only} ) ) {
+    my $lt = $limiter;
+    $limiter = sub { min $lt->( @_ ), $only };
+  }
+  return $self->_ab( $limiter, $term );
 }
 
 sub _abbr {
-  my ( $self, $nd, $word, @path ) = @_;
+  my ( $self, $nd, $limit, $word, @path ) = @_;
+  return $word, @path if $limit-- <= 0;
   return $word, @path unless $nd && $nd->{$word};
   return ( $nd->{$word}{a},
-    @path ? $self->_abbr( $nd->{$word}{k}, @path ) : () );
+    @path ? $self->_abbr( $nd->{$word}{k}, $limit, @path ) : () );
 }
 
 sub _init {
