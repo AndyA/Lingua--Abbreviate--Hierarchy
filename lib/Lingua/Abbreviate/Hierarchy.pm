@@ -89,14 +89,6 @@ sub ab {
   return wantarray ? @ab : $ab[0];
 }
 
-sub _ab {
-  my ( $self, $lt, $term ) = @_;
-  my $sepp = quotemeta $self->{sep};
-  my @path = split /$sepp/, $term;
-  return join $self->{join},
-   $self->_abbr( $self->{_ns}, $lt->( @path ), @path );
-}
-
 sub _abb {
   my ( $self, $term ) = @_;
 
@@ -108,8 +100,7 @@ sub _abb {
     my $to = scalar( @path ) - ( $self->{keep} || 0 );
     my $ab = $term;
     for my $cnt ( $from .. $to ) {
-      $ab = join $self->{join},
-       $self->_abbr( $self->{_ns}, $cnt, @path );
+      $ab = join $self->{join}, $self->_ab( $self->{_ns}, $cnt, @path );
       return $ab if length $ab <= $max;
     }
     if ( defined( my $trunc = $self->{trunc} ) ) {
@@ -122,16 +113,16 @@ sub _abb {
     my $lt = scalar @path;
     $lt = max( $lt - $self->{keep}, 0 ) if defined $self->{keep};
     $lt = min( $lt, $self->{only} ) if defined $self->{only};
-    return join $self->{join}, $self->_abbr( $self->{_ns}, $lt, @path );
+    return join $self->{join}, $self->_ab( $self->{_ns}, $lt, @path );
   }
 }
 
-sub _abbr {
+sub _ab {
   my ( $self, $nd, $limit, $word, @path ) = @_;
   return $word, @path if $limit-- <= 0;
   return $word, @path unless $nd && $nd->{$word};
   return ( $nd->{$word}{a},
-    @path ? $self->_abbr( $nd->{$word}{k}, $limit, @path ) : () );
+    @path ? $self->_ab( $nd->{$word}{k}, $limit, @path ) : () );
 }
 
 sub _init {
