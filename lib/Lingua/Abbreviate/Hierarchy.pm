@@ -134,6 +134,8 @@ namespaces (like domain names).
 Supply a reference to an array containing namespace terms. See
 C<add_namespace> for more details.
 
+=back
+
 =cut
 
 {
