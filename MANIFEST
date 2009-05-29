@@ -1,8 +1,12 @@
 Build.PL
 Changes
-MANIFEST
-README
+inc/MyBuilder.pm
+lib/Lingua/Ab/H.pm
 lib/Lingua/Abbreviate/Hierarchy.pm
+MANIFEST
+META.yml
+README
 t/00.load.t
+t/basic.t
 t/pod-coverage.t
 t/pod.t
