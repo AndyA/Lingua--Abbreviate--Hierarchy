@@ -12,11 +12,11 @@ Lingua::Abbreviate::Hierarchy - Shorten verbose namespaces
 
 =head1 VERSION
 
-This document describes Lingua::Abbreviate::Hierarchy version 0.03
+This document describes Lingua::Abbreviate::Hierarchy version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
