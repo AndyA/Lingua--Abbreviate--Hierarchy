@@ -324,6 +324,8 @@ sub _init {
   $self->{cache} = {};
 }
 
+# Given a list of unique terms return a hash mapping each term onto an
+# equally unique abbreviation.
 sub _ab_list {
   my ( $self, @w ) = @_;
 
@@ -341,6 +343,7 @@ sub _ab_list {
   }
 }
 
+# Traverse the namespace tree making abbreviations for each node.
 sub _make_ab {
   my ( $self, $nd ) = @_;
   my @kk = keys %$nd;
