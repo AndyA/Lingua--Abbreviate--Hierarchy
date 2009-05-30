@@ -11,11 +11,11 @@ Lingua::Ab::H - Shorter alias for Lingua::Abbreviate::Hierarchy
 
 =head1 VERSION
 
-This document describes Lingua::Ab::H version 0.02
+This document describes Lingua::Ab::H version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 INTERFACE
 
