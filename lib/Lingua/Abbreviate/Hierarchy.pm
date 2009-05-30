@@ -224,7 +224,7 @@ sub _abb {
 
   my $sepp = quotemeta $self->{sep};
   my @path = $self->{flipa}( split /$sepp/, $term );
-  my $join = defined $self->{join} ? $self->{join} : $self->{sep};
+  my $join = $self->_join;
   my $abc  = sub {
     my ( $cnt, @path ) = @_;
     join $join,
@@ -264,6 +264,58 @@ sub _ab {
   return $word, @path unless $nd && $nd->{$word};
   return ( $nd->{$word}{a},
     @path ? $self->_ab( $nd->{$word}{k}, $limit, @path ) : () );
+}
+
+=head2 C<ex>
+
+Expand an abbreviation created by calling C<ab>. When applied to
+abbreviations created in the current namespace C<ex> will reliably
+expand arbitrary abbreviated terms. It will also pass through 
+non-abbreviated terms unmolested.
+
+If the namespace for expansion is not identical to the namespace for
+abbreviation then the results are unpredictable.
+
+  my @ab = $abr->ab( @terms );      # Abbreviate terms...
+  my @ex = $abr->ex( @ab );         # ...and get them back
+
+=cut
+
+sub ex {
+  my $self = shift;
+  $self->_init_rev unless $self->{rev};
+  my @ex = map { $self->{rcache}{$_} ||= $self->_exx( $_ ) } @_;
+  return wantarray ? @ex : $ex[0];
+}
+
+sub _join {
+  my $self = shift;
+  return defined $self->{join} ? $self->{join} : $self->{sep};
+}
+
+sub _exx {
+  my ( $self, $term ) = @_;
+  my $sepp = quotemeta $self->_join;
+  my @path = $self->{flipa}( split /$sepp/, $term );
+  return join $self->{sep},
+   $self->{flipa}( $self->_ab( $self->{rev}, scalar @path, @path ) );
+}
+
+sub _rev {
+  my ( $self, $nd ) = @_;
+  my $ond = {};
+  while ( my ( $k, $v ) = each %$nd ) {
+    my $nnd = { %$v, a => $k };
+    $nnd->{k} = $self->_rev( $nnd->{k} ) if $nnd->{k};
+    $ond->{ $v->{a} } = $nnd;
+  }
+  return $ond;
+}
+
+sub _init_rev {
+  my $self = shift;
+  $self->_init unless $self->{cache};
+  $self->{rev} = $self->_rev( $self->{ns} );
 }
 
 sub _init {

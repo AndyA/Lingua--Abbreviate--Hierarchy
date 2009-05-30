@@ -3,3 +3,5 @@ Revision history for Lingua-Abbreviate-Hierarchy
 0.01    2009-05-29
         - Initial release.
 
+0.02    2009-05-30
+        - Added the C<ex> method.
