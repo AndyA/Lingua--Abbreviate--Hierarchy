@@ -8,5 +8,6 @@ META.yml
 README
 t/00.load.t
 t/basic.t
+t/expand.t
 t/pod-coverage.t
 t/pod.t

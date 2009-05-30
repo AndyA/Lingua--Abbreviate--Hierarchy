@@ -5,3 +5,6 @@ Revision history for Lingua-Abbreviate-Hierarchy
 
 0.02    2009-05-30
         - Added the C<ex> method.
+
+0.03    2009-05-30
+        - Add missing t/expand.t to MANIFEST
