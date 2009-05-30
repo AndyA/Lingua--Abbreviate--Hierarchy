@@ -36,7 +36,7 @@ our $VERSION = '0.02';
     comp.lang.perl.misc
     comp.lang.perl.advocacy
   ));
-  
+
 =head1 DESCRIPTION
 
 It's a common practice to abbreviate the elements of namespaces
@@ -48,7 +48,7 @@ like this:
 This module performs such abbreviation. It guarantees that generated
 abbreviations are long enough to be unique within the current namespace.
 
-=head1 INTERFACE 
+=head1 INTERFACE
 
 To abbreviate names within a namespace use the module:
 
@@ -94,20 +94,20 @@ The following options are recognised:
 
 =over
 
-=item C<sep>
+=item C<< sep => >> I<string>
 
 The string that separates components in the namespace. For example '.'
 for domain names or '::' for Perl package names;
 
-=item C<only>
+=item C<< only => >> I<number>
 
 Abbreviate only the initial I<N> elements in the name.
 
-=item C<keep>
+=item C<< keep => >> I<number>
 
 Leave I<N> elements at the end of the name unabbreviated.
 
-=item C<max>
+=item C<< max => >> I<number>
 
 Abbreviate from the left until the generated abbreviation contains I<N>
 or fewer characters. If C<only> is specified then at least that many
@@ -117,19 +117,19 @@ elements will be unabbreviated.
 May return more than I<N> characters if the fully abbreviated name is
 still too long.
 
-=item C<trunc>
+=item C<< trunc => >> I<string>
 
 A truncation string (which may be empty). When C<trunc> is supplied the
 generated abbreviation will always be <= C<max> characters and will be
 prefixed by the truncation string.
 
-=item C<flip>
+=item C<< flip => >> I<bool>
 
 Normally we consider the namespace to be rooted at the left (like a
 filename or package name). Set C<flip> to true to process right-rooted
 namespaces (like domain names).
 
-=item C<ns>
+=item C<< ns => >> I<array ref>
 
 Supply a reference to an array containing namespace terms. See
 C<add_namespace> for more details.
@@ -308,13 +308,7 @@ __END__
 
 None.
 
-=head1 INCOMPATIBILITIES
-
-None reported.
-
 =head1 BUGS AND LIMITATIONS
-
-No bugs have been reported.
 
 Please report any bugs or feature requests to
 C<bug-lingua-abbreviate-hierarchy@rt.cpan.org>, or through the web interface at
