@@ -11,8 +11,11 @@ my $builder = MyBuilder->new(
   license           => 'perl',
   dist_author       => 'Andy Armstrong <andy@hexten.net>',
   dist_version_from => 'lib/Lingua/Abbreviate/Hierarchy.pm',
-  requires          => { 'Test::More' => 0, },
-  add_to_cleanup    => ['Lingua-Abbreviate-Hierarchy-*'],
+  requires          => {
+    'Test::More'        => 0,
+    'Test::Differences' => 0,
+  },
+  add_to_cleanup => ['Lingua-Abbreviate-Hierarchy-*'],
 );
 
 $builder->create_build_script();
